@@ -245,6 +245,9 @@ async function onLoginSubmit(loginBtn, loginFormContainer, logoutButton, logCont
         if (response.status === 401) {
             throw new Error("입력하신 닉네임+상호명 조합이 존재하지 않습니다.");
         }
+        if (response.status === 422) {
+            throw new Error("유효하지 않은 양식입니다.");
+        }
         if (response.status === 429) {
             throw new Error("인증요청제한 (3회/1분). 잠시 후 다시 시도해주세요.");
         }
