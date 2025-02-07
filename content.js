@@ -42,6 +42,9 @@ let isSelectorsValid = false;
 let isHidden = false;
 
 
+// 调试模式
+const DEBUG = false;
+
 
 // 系统提示 与 生成回复内容的格式
 const system_pormpt =
@@ -72,12 +75,26 @@ const system_pormpt =
 
 
 
+
+
+
+
+
+/**
+ * 控制台日志函数：仅在 DEBUG 模式下输出
+ */
+function debugLog(message) {
+    if (DEBUG) {
+        console.log(message);
+    }
+}
+
 /**
  * 写日志函数：同时发送给 popup.js
  */
 function logDiary(diary) {
     if (typeof diary !== "string" || diary.trim() === "") {
-        console.log("无效的日记内容，无法记录。");
+        debugLog("无效的日记内容，无法记录。");
         return;
     }
 
@@ -94,7 +111,7 @@ function logDiary(diary) {
     });
     
 
-    // 封装内容
+    // 封装内容为卡片
     const formattedDiary = `<span style="font-size: 10px; color: #7e8082;">${timestamp}</span><br>${diary}`;
 
     // 如果记录数超过最大限制，删除最旧的一条
@@ -111,7 +128,7 @@ function logDiary(diary) {
             { type: "newDiaryEntry", data: formattedDiary },
             (response) => {
                 if (chrome.runtime.lastError) {
-                    console.log(
+                    debugLog(
                         "发送消息到 popup.js 失败:",
                         chrome.runtime.lastError.message
                     );
@@ -147,22 +164,22 @@ function killPopup() {
     // 根据 selectors 动态选择器获取弹窗元素
     const modal = document.querySelector(selectors.popup_modal);
     if (modal) {
-        console.log("检测到弹窗元素");
+        debugLog("检测到弹窗元素");
         logDiary("팝업창이존재합니다.");
 
         // 查找关闭按钮
         const closeButton = modal.querySelector(selectors.popup_close_button);
         if (closeButton) {
-            console.log("找到关闭按钮，尝试点击...");
+            debugLog("找到关闭按钮，尝试点击...");
             logDiary("팝업창을닫습니다.");
             closeButton.click(); // 模拟点击关闭按钮
         } else {
-            console.log("未找到关闭按钮，移除弹窗...");
+            debugLog("未找到关闭按钮，移除弹窗...");
             logDiary("팝업창을제거합니다.");
             modal.remove(); // 如果没有关闭按钮，直接移除弹窗
         }
     } else {
-        console.log("未检测到弹窗元素");
+        debugLog("未检测到弹窗元素");
     }
 }
 
@@ -173,22 +190,22 @@ function killChatbot() {
     // 根据 selectors 动态选择器获取弹窗元素
     const modal = document.querySelector(selectors.chatbot_modal);
     if (modal) {
-        console.log("检测到弹窗元素");
+        debugLog("检测到弹窗元素");
         logDiary("챗봇이존재합니다.");
 
         // 查找关闭按钮
         const closeButton = modal.querySelector(selectors.chatbot_close_button);
         if (closeButton) {
-            console.log("找到关闭按钮，尝试点击...");
+            debugLog("找到关闭按钮，尝试点击...");
             logDiary("챗봇창을닫습니다.");
             closeButton.click(); // 模拟点击关闭按钮
         } else {
-            console.log("未找到关闭按钮，移除弹窗...");
+            debugLog("未找到关闭按钮，移除弹窗...");
             logDiary("챗봇창을제거합니다.");
             modal.remove(); // 如果没有关闭按钮，直接移除弹窗
         }
     } else {
-        console.log("未检测到弹窗元素");
+        debugLog("未检测到弹窗元素");
     }
 }
 
@@ -207,7 +224,7 @@ function clickReviewButton() {
     if (targetElement) {
         targetElement.click();
     } else {
-        console.log("未找到 '리뷰관리' 按钮");
+        debugLog("未找到 '리뷰관리' 按钮");
     }
 }
 
@@ -217,19 +234,19 @@ function clickReviewButton() {
 function rotateSelectOption() {
     const selectElement = document.querySelector(selectors.select_dropdown);
     if (!selectElement) {
-        console.log("未找到下拉菜单，跳过本次轮换...");
+        debugLog("未找到下拉菜单，跳过本次轮换...");
         return false;
     }
 
     const options = Array.from(selectElement.options);
     if (options.length < 2) {
-        console.log("下拉菜单选项不足，无法轮换...");
+        debugLog("下拉菜单选项不足，无法轮换...");
         return false;
     }
 
     const currentIndex = options.findIndex((option) => option.selected);
     if (currentIndex === -1) {
-        console.log("未找到当前选中选项...");
+        debugLog("未找到当前选中选项...");
         return false;
     }
 
@@ -242,11 +259,12 @@ function rotateSelectOption() {
     selectElement.dispatchEvent(changeEvent);
 
     logDiary(`${options[nextIndex].textContent.trim()} 으로 이동합니다.`);
-    console.log(
+    debugLog(
         `切换到下拉菜单选项: ${options[nextIndex].textContent.trim()}`
     );
     return true;
 }
+
 
 
 /**
@@ -295,7 +313,7 @@ async function generateReply(commentInfo) {
             throw new Error("API Error!");
         }
     } catch (error) {
-        console.log("API Error：", error);
+        debugLog("API Error：", error);
         logDiary(`API Error： ${error.message}`);
         return null;
     }
@@ -352,14 +370,14 @@ async function processCard(card) {
             try {
                 replyInput = await waitForElement(selectors.reply_input, card);
             } catch (error) {
-                console.log("等待回复输入框超时:", error);
+                debugLog("等待回复输入框超时:", error);
                 return;
             }
         }
     }
 
     if (!replyInput) {
-        console.log("未找到回复输入框，跳过");
+        debugLog("未找到回复输入框，跳过");
         return;
     }
 
@@ -371,7 +389,7 @@ async function processCard(card) {
     const reviewElem = card.querySelector(selectors.review_content);
     const reviewContent = reviewElem ? reviewElem.textContent.trim() : "";
     if (!nickname && !reviewContent) {
-        console.log("昵称和评论内容均为空，跳过");
+        debugLog("昵称和评论内容均为空，跳过");
         return;
     }
 
@@ -391,7 +409,7 @@ async function processCard(card) {
         .map((comment) => comment.textContent.trim())
         .join(" | ");
 
-    console.log(`附加内容: ${purchasedItems}, ${ratingScore}, ${riderComments}`);
+    debugLog(`附加内容: ${purchasedItems}, ${ratingScore}, ${riderComments}`);
 
     // 拼接评论信息，传给 AI 生成
     const commentInfo = `닉네임: ${nickname}, 별점: ${ratingScore}/5, 메뉴: ${purchasedItems}, 리뷰: ${reviewContent}, 라이더평가: ${riderComments}`;
@@ -416,9 +434,9 @@ async function processCard(card) {
         logDiary(
             `<div style = "border-radius: 8px;box-shadow: 0 5px 24px 0 rgba(66,69,79,.05),0 3px 12px 0 rgba(66,69,79,.05),0 0 0 1px rgba(66,69,79,.01); background-color: #fff; padding: 10px"><span style = "font-size: 10px; color: #7e8082;">닉네임: ${nickname}  별점: ${ratingScore}  메뉴: ${purchasedItems}  라이더평가: ${riderComments}<br>리뷰:<br>${reviewContent}<br>댓글:</span >\n<span style = "font-size: 12px; color: #1a7cff;">${replyText}</span><div>`
         );
-        console.log("确认按钮已点击，回复已提交。");
+        debugLog("确认按钮已点击，回复已提交。");
     } else {
-        console.log("未找到确认按钮");
+        debugLog("未找到确认按钮");
     }
 }
 
@@ -428,7 +446,7 @@ async function processCard(card) {
 async function processCards() {
     const reviewLists = document.querySelectorAll(selectors.review_list);
     if (reviewLists.length === 0) {
-        console.log("未检测到 review-list");
+        debugLog("未检测到 review-list");
         return;
     }
 
@@ -445,17 +463,15 @@ async function processCards() {
  */
 async function mainLoop() {
 
-    // 加载最新选择器数据
+
     if (isUserInfoValid) {
         await fetchSelectors();
         if (!isSelectorsValid) {
-            console.log("选择器无效，无法启动任务");
+            debugLog("选择器无效，无法启动任务");
             logDiary("선택기가유효하지 않습니다. 작업을시작할수없습니다.");
             return false;
         }
     }
-
-    // 检查版本
     const manifest = chrome.runtime.getManifest();
     VERSION = manifest.version;
     await checkVersion();
@@ -463,7 +479,6 @@ async function mainLoop() {
     logDiary("리뷰모니터링 을 시작하였습니다.");
     running = true;
 
-    // 开始任务循环
     while (running) {
         // 1) 关闭可能出现的弹窗
         killPopup();
@@ -485,7 +500,7 @@ async function mainLoop() {
         if (!running) {
             break;
         }
-        
+
         // 5) 轮换下拉菜单选项，以防止页面长时间不更新
         rotateSelectOption();
         await delay(3000);
@@ -498,10 +513,10 @@ async function mainLoop() {
  * 监听来自 popup.js 的消息，控制脚本的启停
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log(`收到指令: ${message.action}`);
+    debugLog(`收到指令: ${message.action}`);
     if (message.action === "start") {
         if (!isUserInfoValid) {
-            console.log("用户信息无效，无法启动任务");
+            debugLog("用户信息无效，无法启动任务");
             logDiary("사용자 정보가유효하지 않습니다. 작업을시작할수없습니다.");
             sendResponse({ running });
             return false;
@@ -514,7 +529,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             mainLoop();
             sendResponse({ running: true });
         } else {
-            console.log("任务已在运行中");
+            debugLog("任务已在运行中");
         }
     } else if (message.action === "stop") {
         running = false;
@@ -547,7 +562,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 (async () => {
 
 
-    console.log("content.js 已加载");
+    debugLog("content.js 已加载");
 
 
 
@@ -561,7 +576,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  */
 async function fetchSelectors(retryCount = 3, retryDelay = 2000) {
     if (!userInfo.api_key) {
-        console.log("API Key 缺失，无法获取选择器数据");
+        debugLog("API Key 缺失，无法获取选择器数据");
         return false;
     }
 
@@ -569,7 +584,7 @@ async function fetchSelectors(retryCount = 3, retryDelay = 2000) {
 
     for (let attempt = 1; attempt <= retryCount; attempt++) {
         try {
-            console.log(`尝试获取选择器 (第 ${attempt} 次)...`);
+            debugLog(`尝试获取选择器 (第 ${attempt} 次)...`);
 
             const response = await fetch(selectorsUrl, {
                 method: "GET",
@@ -587,16 +602,16 @@ async function fetchSelectors(retryCount = 3, retryDelay = 2000) {
             selectors = await response.json();
             isSelectorsValid = selectors && Object.keys(selectors).length > 0;
 
-            console.log("选择器数据: ", selectors);
+            debugLog("选择器数据: ", selectors);
             return true;
         } catch (error) {
-            console.log(`获取选择器失败 (尝试 ${attempt}/${retryCount})`, error);
+            debugLog(`获取选择器失败 (尝试 ${attempt}/${retryCount})`, error);
 
             if (attempt < retryCount) {
-                console.log(`等待 ${retryDelay / 1000} 秒后重试...`);
+                debugLog(`等待 ${retryDelay / 1000} 秒后重试...`);
                 await new Promise((resolve) => setTimeout(resolve, retryDelay));
             } else {
-                console.log("所有重试尝试均失败，设置 selectors 为空对象");
+                debugLog("所有重试尝试均失败，设置 selectors 为空对象");
                 selectors = {}; // 失败后赋值为空对象，避免后续空引用
                 logDiary(`API Error： ${error.message}`);
             }
@@ -614,7 +629,7 @@ document.addEventListener("visibilitychange", () => {
 
     if (isHidden) {
         popupAlive = false;
-        console.log("用户离开此标签页, 重置 popupAlive 为 false");
+        debugLog("用户离开此标签页, 重置 popupAlive 为 false");
     }
 });
 
@@ -631,9 +646,9 @@ async function fetchWithRetry(url, options, retryCount = 3, retryDelay = 2000) {
             }
             return await response.text();
         } catch (error) {
-            console.log(`请求失败 (第 ${attempt} 次):`, error);
+            debugLog(`请求失败 (第 ${attempt} 次):`, error);
             if (attempt < retryCount) {
-                console.log(`等待 ${retryDelay / 1000} 秒后重试...`);
+                debugLog(`等待 ${retryDelay / 1000} 秒后重试...`);
                 await new Promise((resolve) => setTimeout(resolve, retryDelay));
             } else {
                 throw error;
@@ -645,7 +660,7 @@ async function fetchWithRetry(url, options, retryCount = 3, retryDelay = 2000) {
 
 async function checkVersion() {
     if (!userInfo.api_key) {
-        console.error("API Key 缺失，无法检查更新");
+        debugLog("API Key 缺失，无法检查更新");
         return;
     }
 
@@ -672,7 +687,7 @@ async function checkVersion() {
             }
         }
     } catch (error) {
-        console.error("检查更新时发生错误:", error);
+        debugLog("检查更新时发生错误:", error);
         logDiary(`버전체크 실패하였습니다. ${error.message}`);
     }
 }
@@ -690,7 +705,7 @@ async function typeReplyText(
     // 元素类型验证
     if (!(replyInput instanceof HTMLInputElement) &&
         !(replyInput instanceof HTMLTextAreaElement)) {
-        console.log("无效的输入框元素");
+        debugLog("无效的输入框元素");
         return;
     }
 
@@ -745,7 +760,7 @@ async function typeReplyText(
         const isVisible = isElementCentered(replyInput);
 
         if (!isVisible && options.autoScroll) {
-            console.log("正在将输入框滚动到视窗中央...");
+            debugLog("正在将输入框滚动到视窗中央...");
             await scrollToCenter(replyInput);
         }
     }
@@ -772,7 +787,7 @@ async function typeReplyText(
         await delay(delay_ms);
     }
 
-    console.log("输入完成:", replyText);
+    debugLog("输入完成:", replyText);
 }
 
 // 改进后的可视区域检测
