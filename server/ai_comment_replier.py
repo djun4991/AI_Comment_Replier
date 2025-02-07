@@ -308,9 +308,9 @@ async def get_selectors(
 # 12. 验证账户接口
 # -----------------------------
 # 定义正则表达式：
-# user_name：仅支持英文大小写与数字，长度6～32
+# user_name：仅支持英文大小写与数字，长度5～32
 pattern_user_name = re.compile(r"^[A-Za-z0-9]{5,32}$")
-# shop_name：支持英文、数字及韩文（가-힣），长度6～32
+# shop_name：支持英文、数字及韩文（가-힣），长度5～32
 pattern_shop_name = re.compile(r"^[A-Za-z0-9가-힣]{5,32}$")
 
 @app.post("/v1/verify_user", dependencies=[Depends(RateLimiter(times=3, seconds=60))])
