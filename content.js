@@ -94,7 +94,7 @@ function logDiary(diary) {
     });
     
 
-    // 封装内容为卡片
+    // 封装内容
     const formattedDiary = `<span style="font-size: 10px; color: #7e8082;">${timestamp}</span><br>${diary}`;
 
     // 如果记录数超过最大限制，删除最旧的一条
