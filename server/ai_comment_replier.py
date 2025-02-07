@@ -304,7 +304,7 @@ async def get_selectors(
     return SELECTORS_DATA
 
 # -----------------------------
-# 12. 新增验证账户接口
+# 12. 验证账户接口
 # -----------------------------
 @app.post("/v1/verify_user", dependencies=[Depends(RateLimiter(times=3, seconds=60))])
 async def verify_user(
