@@ -4,7 +4,6 @@ AI Comment Replier 크롬(Chrome)전용 확장 프로그램을 설치하고 사�
 
 1. 크롬 확장 프로그램 다운로드      
 AI Comment Replier 파일을 다운로드하세요.
-다운로드한 ZIP 파일을 압축 해제(Extract)하세요.
 
 2. 크롬 개발자 모드 활성화
 Chrome 브라우저 실행
@@ -13,8 +12,8 @@ chrome://extensions/
 우측 상단의 "개발자 모드(Developer Mode)" 스위치를 켜세요.
 
 3. 확장 프로그램 로드 (설치)
-"압축 해제된 확장 프로그램을 로드합니다(Load unpacked)" 버튼을 클릭하세요.
-압축 해제한 AI_Comment_Replier 폴더를 선택하세요.
+"확장 프로그램을 로드합니다(Load unpacked)" 버튼을 클릭하세요.
+AI_Comment_Replier 폴더를 선택하세요.
 설치 완료 후, 확장 프로그램 목록에서 "AI Comment Replier" 가 표시되면 성공적으로 설치된 것입니다.
 
 4. 확장 프로그램 사용 방법
