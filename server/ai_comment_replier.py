@@ -19,6 +19,7 @@ from sqlalchemy import Column, String, Integer, DateTime, select
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
 from redis.asyncio import Redis
+import re
 
 # -----------------------------
 # 1. 日志 & FastAPI 初始化
@@ -306,12 +307,32 @@ async def get_selectors(
 # -----------------------------
 # 12. 验证账户接口
 # -----------------------------
+# 定义正则表达式：
+# user_name：仅支持英文大小写与数字，长度6～32
+pattern_user_name = re.compile(r"^[A-Za-z0-9]{5,32}$")
+# shop_name：支持英文、数字及韩文（가-힣），长度6～32
+pattern_shop_name = re.compile(r"^[A-Za-z0-9가-힣]{5,32}$")
+
 @app.post("/v1/verify_user", dependencies=[Depends(RateLimiter(times=3, seconds=60))])
 async def verify_user(
     req: VerifyUserRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    # 1. 查询是否已存在记录
+
+    # 验证 user_name 格式：仅允许英文与数字，长度5～32
+    if not pattern_user_name.fullmatch(req.user_name):
+        raise HTTPException(
+            status_code=422,
+            detail="닉네임은 영문 또는 숫자로 이루어진 5~32자여야 합니다."
+        )
+    # 验证 shop_name 格式：允许韩文、英文与数字，长度5～32
+    if not pattern_shop_name.fullmatch(req.shop_name):
+        raise HTTPException(
+            status_code=422,
+            detail="상호명 은 한글, 영문 또는 숫자로 이루어진 5~32자여야 합니다."
+        )
+        
+    # 查询是否已存在记录
     stmt = select(ClientKey).where(ClientKey.client_name == req.user_name)
 
     result = await db.execute(stmt)
@@ -333,7 +354,7 @@ async def verify_user(
             raise HTTPException(status_code=401, detail="닉네임+상호명 조합이존재하지 않습니다")
 
 
-    # 3. 不存在则创建新账户
+    # 不存在则创建新账户
     one_month_later = datetime.now() + timedelta(days=30)
     random_str = secrets.token_hex(16)  # 32位随机hex字符串
     new_api_key = f"api_key_{req.user_name}_{random_str}"
