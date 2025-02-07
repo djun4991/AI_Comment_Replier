@@ -482,7 +482,10 @@ async function mainLoop() {
 
         // 4) 等待 N 分钟，再轮询一次
         await delay(60000 * CHECK_INTERVAL);
-
+        if (!running) {
+            break;
+        }
+        
         // 5) 轮换下拉菜单选项，以防止页面长时间不更新
         rotateSelectOption();
         await delay(3000);
