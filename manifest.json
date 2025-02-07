@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "AI Comment Replier",
+  "version": "25.2.6.1",
+  "description": "배민/배민1 고객리뷰를 실시간모니터링하여, 자동으로 댓글을작성합니다",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon32.png"
+  },
+  "icons": {
+    "16": "icon32.png",
+    "32": "icon32.png",
+    "48": "icon32.png",
+    "128": "icon512.png"
+  },
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage",
+    "webRequest"
+  ],
+  "host_permissions": [ "https://self.baemin.com/*" ],
+  "content_scripts": [
+    {
+      "matches": [ "https://self.baemin.com/*" ],
+      "js": [ "content.js" ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [ "user_info.json" ],
+      "matches": [ "https://self.baemin.com/*" ]
+    }
+  ]
+}
