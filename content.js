@@ -31,6 +31,9 @@ let userInfo = {
 // 全局变量：选择器（从服务器动态获取）
 let selectors = {};
 
+// 全局标记：表示脚本是否正在监控中
+let running = false;
+
 // popup.js 存活状态
 let popupAlive = false;
 
@@ -245,8 +248,6 @@ function rotateSelectOption() {
     return true;
 }
 
-// 全局标记：表示脚本是否正在监控中
-let running = false;
 
 /**
  * 异步延迟函数
@@ -444,16 +445,17 @@ async function processCards() {
  */
 async function mainLoop() {
 
-
+    // 加载最新选择器数据
     if (isUserInfoValid) {
         await fetchSelectors();
         if (!isSelectorsValid) {
             console.log("选择器无效，无法启动任务");
             logDiary("선택기가유효하지 않습니다. 작업을시작할수없습니다.");
-            sendResponse({ running });
             return false;
         }
     }
+
+    // 检查版本
     const manifest = chrome.runtime.getManifest();
     VERSION = manifest.version;
     await checkVersion();
@@ -461,6 +463,7 @@ async function mainLoop() {
     logDiary("리뷰모니터링 을 시작하였습니다.");
     running = true;
 
+    // 开始任务循环
     while (running) {
         // 1) 关闭可能出现的弹窗
         killPopup();
