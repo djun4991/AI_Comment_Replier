@@ -42,7 +42,7 @@ app.add_middleware(
 # -----------------------------
 # 2. 数据库配置
 # -----------------------------
-DATABASE_URL = "mysql+aiomysql://db_user:db_pass@localhost/ai_comment_replier"
+DATABASE_URL = "mysql+aiomysql://db_user:db_pass@localhost/db_name"
 
 engine = create_async_engine(
     DATABASE_URL,
