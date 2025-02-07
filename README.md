@@ -4,6 +4,7 @@ AI Comment Replier 크롬(Chrome) 전용 확장 프로그램을 설치하고 사
 
 ## 1. 크롬 확장 프로그램 다운로드
 1. AI Comment Replier 파일을 다운로드하세요.
+2. [**무료체험신청**](https://blog.ai-canvas.org/ai-comment-replier/) 에서 사용할 닉네임/상호명을 등록해주세요.
 
 ## 2. 크롬 개발자 모드 활성화
 1. Chrome 브라우저 실행
