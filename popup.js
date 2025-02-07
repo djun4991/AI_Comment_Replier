@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", initPopup);
 
+// 调试模式
+const DEBUG = false;
 
 /** 全局变量 */
 let isRunning = false;
@@ -90,7 +92,7 @@ async function saveUserInfoToStorage(data) {
 
 /** 初始化 Popup 主流程 */
 async function initPopup() {
-    console.log("popup.js 已加载");
+    debugLog("popup.js 已加载");
 
     // 初始化并获取关键 DOM 元素
     const {
@@ -107,7 +109,7 @@ async function initPopup() {
         contentTab = await getActiveTab();
         contentTabId = contentTab.id;
     } catch (err) {
-        console.log("获取活动标签页失败:", err);
+        debugLog("获取活动标签页失败:", err);
         return;
     }
 
@@ -122,7 +124,7 @@ async function initPopup() {
     try {
         await getUserInfoFromStorage();
     } catch (error) {
-        console.log("从 chrome.storage 读取用户信息出错:", error);
+        debugLog("从 chrome.storage 读取用户信息出错:", error);
     }
     
 
@@ -201,7 +203,7 @@ function onToggleClick(toggleButton) {
             isRunning = response.running;
             updateToggleButtonState(toggleButton, isRunning);
         } else {
-            console.log("未收到有效的运行状态响应");
+            debugLog("未收到有效的运行状态响应");
         }
     });
 }
@@ -259,7 +261,7 @@ async function onLoginSubmit(loginBtn, loginFormContainer, logoutButton, logCont
         try {
             await saveUserInfoToStorage(data);
         } catch (error) {
-            console.log("保存到 chrome.storage 出错:", error);
+            debugLog("保存到 chrome.storage 出错:", error);
         }
 
         // 更新登录状态相关的UI
@@ -275,7 +277,7 @@ async function onLoginSubmit(loginBtn, loginFormContainer, logoutButton, logCont
         updateLogContainer(logContainer, []); // 先清理或刷新一次
 
     } catch (error) {
-        console.log("登录验证失败:", error);
+        debugLog("登录验证失败:", error);
 
         showLoginMessage(error.message, true);
 
@@ -305,7 +307,7 @@ function onLogoutClick(logContainer) {
         // 同时清空 chrome.storage（可选，如果你已经使用 chrome.storage）
         chrome.storage.local.clear(() => {
             if (chrome.runtime.lastError) {
-                console.log("清空 chrome.storage 时出错:", chrome.runtime.lastError);
+                debugLog("清空 chrome.storage 时出错:", chrome.runtime.lastError);
             } 
             
         });
@@ -356,7 +358,7 @@ async function handleLoggedInState(toggleButton, logContainer) {
         if (response && Array.isArray(response.logs)) {
             updateLogContainer(logContainer, response.logs);
         } else {
-            console.log("未收到有效日记数据");
+            debugLog("未收到有效日记数据");
         }
     });
 
@@ -397,12 +399,12 @@ function getActiveTab() {
  */
 function sendMessageToContent(message, callback) {
     if (!contentTabId) {
-        console.log("未获取到 contentTabId，无法发送消息");
+        debugLog("未获取到 contentTabId，无法发送消息");
         return;
     }
     chrome.tabs.sendMessage(contentTabId, message, (response) => {
         if (chrome.runtime.lastError) {
-            console.log("sendMessage 错误:", chrome.runtime.lastError.message);
+            debugLog("sendMessage 错误:", chrome.runtime.lastError.message);
             return;
         }
         if (callback) {
@@ -495,7 +497,7 @@ function updateLoginState(loginFormContainer, logoutButton) {
 function getElementOrLogError(id) {
     const el = document.getElementById(id);
     if (!el) {
-        console.log(`未找到 DOM 元素: ${id}`);
+        debugLog(`未找到 DOM 元素: ${id}`);
     }
     return el;
 }
@@ -520,4 +522,13 @@ function showLoginMessage(message, isError = false) {
     messagesPlaceholder.appendChild(msg);
     
     messagesPlaceholder.className = isError ? "notice notice-error" : "notice notice-noerror";
+}
+
+/**
+* 控制台日志函数：仅在 DEBUG 模式下输出
+*/
+function debugLog(message) {
+    if (DEBUG) {
+        console.log(message);
+    }
 }
