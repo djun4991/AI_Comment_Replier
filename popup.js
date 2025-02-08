@@ -89,24 +89,6 @@ async function saveUserInfoToStorage(data) {
 }
 
 
-/**  
- * 检查当前页面 是否为支持的页面, 更新 ui 并输出提示
- * @param {string} expected 预期的页面 URL
- * @param {string} current 当前页面的 URL
- * @returns {boolean} 是否为支持的页面
- */
-function checkPage(expected, current) {
-    const urlObj = new URL(current);
-    if (urlObj.hostname !== expected) {
-        document.getElementById("username").remove();
-        document.getElementById("shopname").remove();
-        document.getElementById("login_bt").remove();
-        showLoginMessage('<span style = "font-size: 16px;">배민 <a href="https://self.baemin.com" target="_blank" rel="noopener noreferrer">셀프서비스</a> 에서만 사용가능합니다.</span>', true);
-        return false;
-    }
-    return true;
-}
-
 
 /** 初始化 Popup 主流程 */
 async function initPopup() {
@@ -211,7 +193,10 @@ function addEventListeners({
     document.addEventListener("visibilitychange", onPopupVisibilityChange);
 }
 
-/** 当用户点下开始/停止按钮时触发 */
+/** 
+ * 当用户点下开始/停止按钮时触发 
+ * @param {HTMLElement} toggleButton 按钮元素
+ */
 function onToggleClick(toggleButton) {
     const action = isRunning ? "stop" : "start";
     sendMessageToContent({ action }, (response) => {
@@ -224,7 +209,13 @@ function onToggleClick(toggleButton) {
     });
 }
 
-/** 当用户提交登录表单时触发 */
+/** 
+ * 当用户提交登录表单时触发 
+ * @param {HTMLElement} loginBtn 登录按钮
+ * @param {HTMLElement} loginFormContainer 登录表单容器
+ * @param {HTMLElement} logoutButton 登出按钮
+ * @param {HTMLElement} logContainer 日志容器
+ */
 async function onLoginSubmit(loginBtn, loginFormContainer, logoutButton, logContainer) {
     // 防止重复提交
     loginBtn.disabled = true;
@@ -310,7 +301,10 @@ async function onLoginSubmit(loginBtn, loginFormContainer, logoutButton, logCont
     }
 }
 
-/** 当用户点击登出按钮时触发 */
+/** 
+ * 当用户点击登出按钮时触发 
+ * @param {HTMLElement} logContainer 日志容器
+ */
 function onLogoutClick(logContainer) {
     const logoutButton = document.getElementById("logout-btn");
     if (logoutButton.textContent === "로그아웃") {
@@ -359,7 +353,11 @@ function onPopupVisibilityChange() {
     }
 }
 
-/** 处理已登录情况下的一些初始化步骤 */
+/** 
+ * 处理已登录情况下的一些初始化步骤 
+ * @param {HTMLElement} toggleButton 按钮元素
+ * @param {HTMLElement} logContainer 日志容器
+ */
 async function handleLoggedInState(toggleButton, logContainer) {
     // 通知 content.js 用户信息
     sendMessageToContent({ action: "setUserInfo", data: userinfo });
@@ -437,13 +435,21 @@ function sendMessageToContent(message, callback) {
     });
 }
 
-/** 更新按钮的外观和文本 */
+/** 
+ * 更新按钮的外观和文本 
+ * @param {HTMLElement} toggleButton 按钮元素
+ * @param {boolean} running 是否正在运行
+ */
 function updateToggleButtonState(toggleButton, running) {
     toggleButton.textContent = running ? "리뷰모니터링중..." : "리뷰모니터링시작";
     toggleButton.classList.toggle("stop", running);
 }
 
-/** 获取并更新日志容器的显示内容 */
+/** 
+ * 获取并更新日志容器的显示内容 
+ * @param {HTMLElement} logContainer 日志容器
+ * @param {Array<string>} logs 日志数组
+ */
 function updateLogContainer(logContainer, logs) {
     logContainer.innerHTML = ""; // 先清空
     appendLog(
@@ -470,7 +476,11 @@ function updateLogContainer(logContainer, logs) {
     }
 }
 
-/** 追加单条日志到容器底部 */
+/** 
+ * 追加单条日志到容器底部 
+ * @param {HTMLElement} logContainer 日志容器
+ * @param {string} log 日志内容
+ */
 function appendLog(logContainer, log) {
     const logEntry = document.createElement("div");
     logEntry.style.marginBottom = "10px";
@@ -489,7 +499,10 @@ function getUserInfoFromLocal() {
     userinfo.expiration_date = localStorage.getItem("acr_bm_expiration_date");
 }
 
-/** 保存用户信息到 localStorage */
+/** 
+ * 保存用户信息到 localStorage 
+ * @param {object} data 用户数据 { user_id, user_name, shop_name, api_key, expiration_date }
+ */
 function saveUserInfoToLocal(data) {
     userinfo.user_id = data.user_id;
     userinfo.user_name = data.user_name;
@@ -506,7 +519,11 @@ function saveUserInfoToLocal(data) {
     localStorage.setItem("acr_bm_expiration_date", data.expiration_date);
 }
 
-/** 更新登录状态相关的UI */
+/** 
+ * 更新登录状态相关的UI 
+ * @param {HTMLElement} loginFormContainer 登录表单容器
+ * @param {HTMLElement} logoutButton 登出按钮
+ */
 function updateLoginState(loginFormContainer, logoutButton) {
     isLogin = Boolean(userinfo.api_key);
     if (isLogin) {
@@ -517,7 +534,10 @@ function updateLoginState(loginFormContainer, logoutButton) {
     }
 }
 
-/** 获取指定ID的DOM元素, 未找到则在控制台报错 */
+/** 
+ * 获取指定ID的DOM元素, 未找到则在控制台报错 
+ * @param {string} id 元素ID
+ */
 function getElementOrLogError(id) {
     const el = document.getElementById(id);
     if (!el) {
@@ -526,7 +546,11 @@ function getElementOrLogError(id) {
     return el;
 }
 
-/** 给一个元素做简单的淡出动画，结束后隐藏 */
+/** 
+ * 给一个元素做简单的淡出动画，结束后隐藏 
+ * @param {HTMLElement} element 要淡出的元素
+ * @param {number} [duration=500] 动画时长（毫秒）
+ */
 function fadeOutElement(element, duration = 500) {
     element.style.opacity = "1";
     element.style.transition = `opacity ${duration}ms ease-out`;
@@ -536,7 +560,11 @@ function fadeOutElement(element, duration = 500) {
     }, duration);
 }
 
-/** 在登陆表单 输出提示内容 */
+/** 
+ * 在登陆表单 输出提示内容 
+ * @param {string} message 提示内容
+ * @abstract isError 是否为错误提示，默认为 false
+ */
 function showLoginMessage(message, isError = false) {
     const messagesPlaceholder = document.getElementById("acr-messages-placeholder");
     const msg = document.createElement("span");
@@ -548,8 +576,28 @@ function showLoginMessage(message, isError = false) {
     messagesPlaceholder.className = isError ? "notice notice-error" : "notice notice-noerror";
 }
 
+/**  
+ * 检查当前页面 是否为支持的页面, 更新 ui 并输出提示
+ * @param {string} expected 预期的页面 URL
+ * @param {string} current 当前页面的 URL
+ * @returns {boolean} 是否为支持的页面
+ */
+function checkPage(expected, current) {
+    const urlObj = new URL(current);
+    if (urlObj.hostname !== expected) {
+        document.getElementById("username").remove();
+        document.getElementById("shopname").remove();
+        document.getElementById("login_bt").remove();
+        showLoginMessage('<span style = "font-size: 16px;">배민 <a href="https://self.baemin.com" target="_blank" rel="noopener noreferrer">셀프서비스</a> 에서만 사용가능합니다.</span>', true);
+        return false;
+    }
+    return true;
+}
+
+
 /**
 * 控制台日志函数：仅在 DEBUG 模式下输出
+* @param {string} message 要输出的消息
 */
 function debugLog(message) {
     if (DEBUG) {
