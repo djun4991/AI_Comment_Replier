@@ -105,9 +105,10 @@ function createDelay(ms) {
 }
 
 async function Delay(ms) {
-    // 创建延迟对象并等待
+    // 创建延迟对象
     const delayObj = createDelay(ms); // 立即返回一个延迟对象
 
+    // 等待延迟结束
     await delayObj.promise
         .then(() => debugLog("延迟结束"))
         .catch(err => debugLog(`被取消：${err.message}`));
@@ -170,7 +171,7 @@ function logDiary(diary) {
 }
 
 /**
- * 查找文本包含指定内容的按钮，并点击
+ * 查找包含指定内容的按钮，并点击
  */
 function clickDismissButton(textContent) {
     const buttons = document.querySelectorAll("button");
@@ -342,6 +343,10 @@ async function generateReply(commentInfo) {
 
 /**
  * 等待元素出现, 返回元素对象
+ * @param {string} selector - 元素选择器
+ * @param {HTMLElement} parent - 父级元素，默认为 document.
+ * @param {number} timeoutMs - 超时时间，默认为 3000ms.
+ * @returns {Promise<HTMLElement>} - 返回 Promise 对象
  */
 function waitForElement(selector, parent = document, timeoutMs = 3000) {
     // 先检查一次
@@ -437,6 +442,7 @@ async function processCard(card) {
     const replyText = await generateReply(commentInfo);
     if (!replyText) return;
 
+
     // 填写并提交回复
     if (!isHidden) {
         await typeReplyText(replyInput, replyText);
@@ -445,10 +451,11 @@ async function processCard(card) {
         replyInput.dispatchEvent(new Event("input", { bubbles: true }));
     }
 
+
+    // 查找确认按钮并点击
     const confirmButton = Array.from(card.querySelectorAll(selectors.confirm_button)).find(
         (button) => button.textContent.trim() === selectors.confirm_button_text
     );
-
     if (confirmButton) {
         confirmButton.click();
 
@@ -465,12 +472,15 @@ async function processCard(card) {
  * 处理页面上的所有卡片
  */
 async function processCards() {
+
+    // 获取所有评论列表
     const reviewLists = document.querySelectorAll(selectors.review_list);
     if (reviewLists.length === 0) {
         debugLog("未检测到 review-list");
         return;
     }
 
+    // 遍历所有评论列表
     for (const list of reviewLists) {
         const cards = list.querySelectorAll(selectors.review_card);
         for (let i = 0; i < cards.length; i++) {
@@ -485,6 +495,7 @@ async function processCards() {
 async function mainLoop() {
 
 
+    // 检查选择器
     if (isUserInfoValid) {
         await fetchSelectors();
         if (!isSelectorsValid) {
@@ -493,6 +504,8 @@ async function mainLoop() {
             return false;
         }
     }
+
+    // 检查更新
     const manifest = chrome.runtime.getManifest();
     VERSION = manifest.version;
     await checkVersion();
@@ -602,16 +615,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 
-(async () => {
-
-
-    debugLog("content.js 已加载");
-
-
-
-    // 这里不直接调用 mainLoop，由 popup.js 发消息 "start" 时再启动
-})();
-
 
 /**
  * 异步向服务器获取选择器配置
@@ -676,6 +679,15 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
+/**
+ * 带重试的 fetch 函数
+ * 
+ * @param {any} url         - 请求 URL
+ * @param {any} options     - 请求配置
+ * @param {any} retryCount  - 重试次数
+ * @param {any} retryDelay  - 重试延迟（毫秒）
+ * @returns
+ */
 async function fetchWithRetry(url, options, retryCount = 3, retryDelay = 2000) {
     for (let attempt = 1; attempt <= retryCount; attempt++) {
         try {
@@ -701,6 +713,7 @@ async function fetchWithRetry(url, options, retryCount = 3, retryDelay = 2000) {
 }
 
 
+// 检查更新
 async function checkVersion() {
     if (!userInfo.api_key) {
         debugLog("API Key 缺失，无法检查更新");
@@ -735,6 +748,15 @@ async function checkVersion() {
     }
 }
 
+/**
+ * 为输入框逐字输入文本
+ * 
+ * @param {any} replyInput - 输入框元素
+ * @param {any} replyText  - 要输入的文本
+ * @param {any} delay_ms   - 输入延迟（毫秒）
+ * @param {any} options    - 配置选项
+ * @returns
+ */
 async function typeReplyText(
     replyInput,
     replyText,
@@ -771,6 +793,7 @@ async function typeReplyText(
             const duration = 500;
             let startTime = null;
 
+            // 动画函数
             const animation = (currentTime) => {
                 if (!startTime) startTime = currentTime;
                 const timeElapsed = currentTime - startTime;
@@ -843,3 +866,15 @@ function isElementCentered(el) {
     return elementCenterY > viewportHeight / 3 &&
         elementCenterY < viewportHeight * 2 / 3;
 }
+
+
+// 页面加载完成后执行
+(async () => {
+
+
+    debugLog("content.js 已加载");
+
+
+
+    // 这里不直接调用 mainLoop，由 popup.js 发消息 "start" 时再启动
+})();
