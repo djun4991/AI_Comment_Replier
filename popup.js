@@ -89,6 +89,24 @@ async function saveUserInfoToStorage(data) {
 }
 
 
+/** 检查当前页面 是否为支持的页面, 更新 ui 并输出提示 
+ * 
+ * @param {string} expected 预期的页面 URL
+ * @param {string} current 当前页面的 URL
+ * @returns {boolean} 是否为支持的页面
+ */
+function checkPage(expected, current) {
+    const urlObj = new URL(current);
+    if (urlObj.hostname !== expected) {
+        document.getElementById("username").remove();
+        document.getElementById("shopname").remove();
+        document.getElementById("login_bt").remove();
+        showLoginMessage('배민 <a href="https://self.baemin.com" target="_blank" rel="noopener noreferrer">셀프서비스</a> 에서만 사용가능합니다.', true);
+        return false;
+    }
+    return true;
+}
+
 
 /** 初始化 Popup 主流程 */
 async function initPopup() {
@@ -113,10 +131,8 @@ async function initPopup() {
         return;
     }
 
-    // 如果不是 baemin.com 页面，不进行后续操作
-    const urlObj = new URL(contentTab.url);
-    if (urlObj.hostname !== "self.baemin.com") {
-        showLoginMessage('배민 <a href="https://self.baemin.com" target="_blank" rel="noopener noreferrer">셀프서비스</a> 에서만 사용가능합니다.', true);
+    // 如果不是 self.baemin.com 页面，不进行后续操作
+    if (!checkPage("self.baemin.com", contentTab.url)) {
         return;
     }
     
