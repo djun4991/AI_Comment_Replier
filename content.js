@@ -104,6 +104,15 @@ function createDelay(ms) {
     };
 }
 
+async function Delay(ms) {
+    // 创建延迟对象并等待
+    const delayObj = createDelay(ms); // 立即返回一个延迟对象
+
+    await delayObj.promise
+        .then(() => debugLog("延迟结束"))
+        .catch(err => debugLog(`被取消：${err.message}`));
+}
+
 
 /**
  * 控制台日志函数：仅在 DEBUG 模式下输出
@@ -818,12 +827,7 @@ async function typeReplyText(
         // 触发带冒泡的输入事件
         replyInput.dispatchEvent(new Event("input", eventOptions));
 
-        // 创建延迟对象并等待
-        const delayObj = createDelay(delay_ms); // 立即返回一个延迟对象
-
-        await delayObj.promise
-            .then(() => console.log("延迟结束"))
-            .catch(err => console.error("被取消：", err.message));
+        await Delay(delay_ms);
     }
 
     debugLog(`输入完成: ${replyText}`);
