@@ -11,8 +11,9 @@ const API_URL = "https://api.ai-canvas.org";
 
 
 
-// 轮询间隔（分钟）
+// 轮询间隔（分钟） 与 延迟对象
 const CHECK_INTERVAL = 5;
+let maindelayObj = null;
 
 // 全局日记数组和最大记录数
 const diaryEntries = [];
@@ -79,6 +80,30 @@ const system_pormpt =
 
 
 
+/**
+ * 异步延迟函数，支持中途取消
+ */
+function createDelay(ms) {
+    let timer = null;
+    let rejectFunc = null;
+
+    const promise = new Promise((resolve, reject) => {
+        rejectFunc = reject;
+        timer = setTimeout(resolve, ms);
+    });
+
+    return {
+        promise,
+        cancel() {
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+                rejectFunc(new Error("Delay cancelled"));
+            }
+        }
+    };
+}
+
 
 /**
  * 控制台日志函数：仅在 DEBUG 模式下输出
@@ -128,10 +153,7 @@ function logDiary(diary) {
             { type: "newDiaryEntry", data: formattedDiary },
             (response) => {
                 if (chrome.runtime.lastError) {
-                    debugLog(
-                        "发送消息到 popup.js 失败:",
-                        chrome.runtime.lastError.message
-                    );
+                    debugLog(`发送消息到 popup.js 失败: ${chrome.runtime.lastError.message}`);
                 }
             }
         );
@@ -259,20 +281,10 @@ function rotateSelectOption() {
     selectElement.dispatchEvent(changeEvent);
 
     logDiary(`${options[nextIndex].textContent.trim()} 으로 이동합니다.`);
-    debugLog(
-        `切换到下拉菜单选项: ${options[nextIndex].textContent.trim()}`
-    );
+    debugLog(`切换到下拉菜单选项: ${options[nextIndex].textContent.trim()}`);
     return true;
 }
 
-
-
-/**
- * 异步延迟函数
- */
-function delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 /**
  * 调用远程接口生成回复
@@ -313,8 +325,8 @@ async function generateReply(commentInfo) {
             throw new Error("API Error!");
         }
     } catch (error) {
-        debugLog("API Error：", error);
-        logDiary(`API Error： ${error.message}`);
+        debugLog(`API Error：${error.message}`);
+        logDiary(`API Error：${error.message}`);
         return null;
     }
 }
@@ -370,7 +382,7 @@ async function processCard(card) {
             try {
                 replyInput = await waitForElement(selectors.reply_input, card);
             } catch (error) {
-                debugLog("等待回复输入框超时:", error);
+                debugLog(`等待回复输入框超时: ${error.message}`);
                 return;
             }
         }
@@ -483,27 +495,48 @@ async function mainLoop() {
         // 1) 关闭可能出现的弹窗
         killPopup();
         killChatbot();
-        await delay(1000);
+
+        // 创建延迟对象，并等待延迟结束
+        maindelayObj = createDelay(1000);
+        await maindelayObj.promise
+            .then(() => debugLog("延迟结束"))
+            .catch(err => debugLog(`被取消：${err.message}`));
+        if (!running) {
+            break;
+        }   
 
         // 2) 点击 “리뷰관리” 按钮
         clickReviewButton();
-        await delay(3000);
 
-        // 3) 处理所有卡片
-        await processCards();
+        // 创建延迟对象，并等待延迟结束
+        maindelayObj = createDelay(3000);
+        await maindelayObj.promise
+            .then(() => debugLog("延迟结束"))
+                .catch(err => debugLog(`被取消：${err.message}`));
         if (!running) {
             break;
         }
 
+        // 3) 处理所有卡片
+        await processCards();
+  
+
         // 4) 等待 N 分钟，再轮询一次
-        await delay(60000 * CHECK_INTERVAL);
+        maindelayObj = createDelay(60000 * CHECK_INTERVAL);
+        await maindelayObj.promise
+            .then(() => debugLog("延迟结束"))
+            .catch(err => debugLog(`被取消：${err.message}`));
         if (!running) {
             break;
         }
 
         // 5) 轮换下拉菜单选项，以防止页面长时间不更新
         rotateSelectOption();
-        await delay(3000);
+
+        maindelayObj = createDelay(3000);
+        await maindelayObj.promise
+            .then(() => debugLog("延迟结束"))
+            .catch(err => debugLog(`被取消：${err.message}`));
     }
 
     logDiary("리뷰모니터링 이 중지되었습니다.");
@@ -533,6 +566,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
     } else if (message.action === "stop") {
         running = false;
+        maindelayObj.cancel();
         sendResponse({ running: false });
         logDiary("진행중인 작업이끝나면, 리뷰모니터링 을 중지할예정입니다.");
     } else if (message.action === "getStatus") {
@@ -602,10 +636,10 @@ async function fetchSelectors(retryCount = 3, retryDelay = 2000) {
             selectors = await response.json();
             isSelectorsValid = selectors && Object.keys(selectors).length > 0;
 
-            debugLog("选择器数据: ", selectors);
+            debugLog(`选择器数据: ${JSON.stringify(selectors)}`);
             return true;
         } catch (error) {
-            debugLog(`获取选择器失败 (尝试 ${attempt}/${retryCount})`, error);
+            debugLog(`获取选择器失败 (尝试 ${attempt}/${retryCount}) : ${error.message}`);
 
             if (attempt < retryCount) {
                 debugLog(`等待 ${retryDelay / 1000} 秒后重试...`);
@@ -646,7 +680,7 @@ async function fetchWithRetry(url, options, retryCount = 3, retryDelay = 2000) {
             }
             return await response.text();
         } catch (error) {
-            debugLog(`请求失败 (第 ${attempt} 次):`, error);
+            debugLog(`请求失败 (第 ${attempt} 次): ${error.message}`);
             if (attempt < retryCount) {
                 debugLog(`等待 ${retryDelay / 1000} 秒后重试...`);
                 await new Promise((resolve) => setTimeout(resolve, retryDelay));
@@ -687,7 +721,7 @@ async function checkVersion() {
             }
         }
     } catch (error) {
-        debugLog("检查更新时发生错误:", error);
+        debugLog(`检查更新时发生错误: ${error.message}`);
         logDiary(`버전체크 실패하였습니다. ${error.message}`);
     }
 }
@@ -784,10 +818,15 @@ async function typeReplyText(
         // 触发带冒泡的输入事件
         replyInput.dispatchEvent(new Event("input", eventOptions));
 
-        await delay(delay_ms);
+        // 创建延迟对象并等待
+        const delayObj = createDelay(delay_ms); // 立即返回一个延迟对象
+
+        await delayObj.promise
+            .then(() => console.log("延迟结束"))
+            .catch(err => console.error("被取消：", err.message));
     }
 
-    debugLog("输入完成:", replyText);
+    debugLog(`输入完成: ${replyText}`);
 }
 
 // 改进后的可视区域检测
