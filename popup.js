@@ -89,8 +89,8 @@ async function saveUserInfoToStorage(data) {
 }
 
 
-/** 检查当前页面 是否为支持的页面, 更新 ui 并输出提示 
- * 
+/**  
+ * 检查当前页面 是否为支持的页面, 更新 ui 并输出提示
  * @param {string} expected 预期的页面 URL
  * @param {string} current 当前页面的 URL
  * @returns {boolean} 是否为支持的页面
@@ -101,7 +101,7 @@ function checkPage(expected, current) {
         document.getElementById("username").remove();
         document.getElementById("shopname").remove();
         document.getElementById("login_bt").remove();
-        showLoginMessage('배민 <a href="https://self.baemin.com" target="_blank" rel="noopener noreferrer">셀프서비스</a> 에서만 사용가능합니다.', true);
+        showLoginMessage('<span style = "font-size: 16px;">배민 <a href="https://self.baemin.com" target="_blank" rel="noopener noreferrer">셀프서비스</a> 에서만 사용가능합니다.</span>', true);
         return false;
     }
     return true;
