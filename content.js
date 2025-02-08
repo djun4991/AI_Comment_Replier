@@ -13,7 +13,7 @@ const API_URL = "https://api.ai-canvas.org";
 
 // 轮询间隔（分钟） 与 延迟对象
 const CHECK_INTERVAL = 5;
-let maindelayObj = null;
+let mainDelayObj = null;
 
 // 全局日记数组和最大记录数
 const diaryEntries = [];
@@ -506,8 +506,8 @@ async function mainLoop() {
         killChatbot();
 
         // 创建延迟对象，并等待延迟结束
-        maindelayObj = createDelay(1000);
-        await maindelayObj.promise
+        mainDelayObj = createDelay(1000);
+        await mainDelayObj.promise
             .then(() => debugLog("延迟结束"))
             .catch(err => debugLog(`被取消：${err.message}`));
         if (!running) {
@@ -518,8 +518,8 @@ async function mainLoop() {
         clickReviewButton();
 
         // 创建延迟对象，并等待延迟结束
-        maindelayObj = createDelay(3000);
-        await maindelayObj.promise
+        mainDelayObj = createDelay(3000);
+        await mainDelayObj.promise
             .then(() => debugLog("延迟结束"))
                 .catch(err => debugLog(`被取消：${err.message}`));
         if (!running) {
@@ -531,8 +531,8 @@ async function mainLoop() {
   
 
         // 4) 等待 N 分钟，再轮询一次
-        maindelayObj = createDelay(60000 * CHECK_INTERVAL);
-        await maindelayObj.promise
+        mainDelayObj = createDelay(60000 * CHECK_INTERVAL);
+        await mainDelayObj.promise
             .then(() => debugLog("延迟结束"))
             .catch(err => debugLog(`被取消：${err.message}`));
         if (!running) {
@@ -542,8 +542,8 @@ async function mainLoop() {
         // 5) 轮换下拉菜单选项，以防止页面长时间不更新
         rotateSelectOption();
 
-        maindelayObj = createDelay(3000);
-        await maindelayObj.promise
+        mainDelayObj = createDelay(3000);
+        await mainDelayObj.promise
             .then(() => debugLog("延迟结束"))
             .catch(err => debugLog(`被取消：${err.message}`));
     }
@@ -575,7 +575,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
     } else if (message.action === "stop") {
         running = false;
-        maindelayObj.cancel();
+        mainDelayObj.cancel();
         sendResponse({ running: false });
         logDiary("진행중인 작업이끝나면, 리뷰모니터링 을 중지할예정입니다.");
     } else if (message.action === "getStatus") {
