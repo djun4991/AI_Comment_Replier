@@ -109,7 +109,7 @@ async function initPopup() {
         contentTab = await getActiveTab();
         contentTabId = contentTab.id;
     } catch (err) {
-        debugLog("获取活动标签页失败:", err);
+        debugLog(`获取活动标签页失败: ${err.message}`);
         return;
     }
 
@@ -124,7 +124,7 @@ async function initPopup() {
     try {
         await getUserInfoFromStorage();
     } catch (error) {
-        debugLog("从 chrome.storage 读取用户信息出错:", error);
+        debugLog(`从 chrome.storage 读取用户信息出错: ${error.message}`);
     }
     
 
@@ -269,7 +269,7 @@ async function onLoginSubmit(loginBtn, loginFormContainer, logoutButton, logCont
         try {
             await saveUserInfoToStorage(data);
         } catch (error) {
-            debugLog("保存到 chrome.storage 出错:", error);
+            debugLog(`保存到 chrome.storage 出错: ${error.message}`);
         }
 
         // 更新登录状态相关的UI
@@ -285,7 +285,7 @@ async function onLoginSubmit(loginBtn, loginFormContainer, logoutButton, logCont
         updateLogContainer(logContainer, []); // 先清理或刷新一次
 
     } catch (error) {
-        debugLog("登录验证失败:", error);
+        debugLog(`登录验证失败: ${error.message}`);
 
         showLoginMessage(error.message, true);
 
@@ -315,7 +315,7 @@ function onLogoutClick(logContainer) {
         // 同时清空 chrome.storage（可选，如果你已经使用 chrome.storage）
         chrome.storage.local.clear(() => {
             if (chrome.runtime.lastError) {
-                debugLog("清空 chrome.storage 时出错:", chrome.runtime.lastError);
+                debugLog(`清空 chrome.storage 时出错: ${chrome.runtime.lastError.message}`);
             } 
             
         });
@@ -412,7 +412,7 @@ function sendMessageToContent(message, callback) {
     }
     chrome.tabs.sendMessage(contentTabId, message, (response) => {
         if (chrome.runtime.lastError) {
-            debugLog("sendMessage 错误:", chrome.runtime.lastError.message);
+            debugLog(`sendMessage 错误: ${chrome.runtime.lastError.message}`);
             return;
         }
         if (callback) {
