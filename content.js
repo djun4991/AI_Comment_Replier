@@ -82,6 +82,8 @@ const system_pormpt =
 
 /**
  * 异步延迟函数，支持中途取消
+ * @param {number} ms - 延迟时间（毫秒）
+ * @returns {Promise} - 返回一个 Promise 对象
  */
 function createDelay(ms) {
     let timer = null;
@@ -117,6 +119,7 @@ async function Delay(ms) {
 
 /**
  * 控制台日志函数：仅在 DEBUG 模式下输出
+ * @param {string} message - 要输出的日志信息
  */
 function debugLog(message) {
     if (DEBUG) {
@@ -126,6 +129,7 @@ function debugLog(message) {
 
 /**
  * 写日志函数：同时发送给 popup.js
+ * @param {string} diary - 要记录的日志信息
  */
 function logDiary(diary) {
     if (typeof diary !== "string" || diary.trim() === "") {
@@ -172,6 +176,8 @@ function logDiary(diary) {
 
 /**
  * 查找包含指定内容的按钮，并点击
+ * @param {string} textContent - 按钮文本内容
+ * @returns {boolean} - 是否找到并点击了按钮
  */
 function clickDismissButton(textContent) {
     const buttons = document.querySelectorAll("button");
@@ -375,6 +381,7 @@ function waitForElement(selector, parent = document, timeoutMs = 3000) {
 
 /**
  * 从单个卡片提取所需信息并自动回复
+ * @param {HTMLElement} card - 单个评论卡片
  */
 async function processCard(card) {
 
@@ -618,7 +625,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 /**
  * 异步向服务器获取选择器配置
- * 需要在请求头中添加 Authorization: <API_KEY>
+ * @param {number} retryCount - 重试次数
+ * @param {number} retryDelay - 重试延迟（毫秒）
+ * @returns {boolean} - 是否成功获取选择器
  */
 async function fetchSelectors(retryCount = 3, retryDelay = 2000) {
     if (!userInfo.api_key) {
@@ -686,7 +695,6 @@ document.addEventListener("visibilitychange", () => {
  * @param {any} options     - 请求配置
  * @param {any} retryCount  - 重试次数
  * @param {any} retryDelay  - 重试延迟（毫秒）
- * @returns
  */
 async function fetchWithRetry(url, options, retryCount = 3, retryDelay = 2000) {
     for (let attempt = 1; attempt <= retryCount; attempt++) {
@@ -755,7 +763,6 @@ async function checkVersion() {
  * @param {any} replyText  - 要输入的文本
  * @param {any} delay_ms   - 输入延迟（毫秒）
  * @param {any} options    - 配置选项
- * @returns
  */
 async function typeReplyText(
     replyInput,
@@ -856,7 +863,10 @@ async function typeReplyText(
     debugLog(`输入完成: ${replyText}`);
 }
 
-// 改进后的可视区域检测
+/** 改进后的可视区域检测
+ * @param {HTMLElement} el - 要检测的元素
+ * @returns {boolean} - 是否在视窗中间1/3区域
+ */
 function isElementCentered(el) {
     const rect = el.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
